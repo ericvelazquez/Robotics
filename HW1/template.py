@@ -7,8 +7,8 @@ from RobotLib.FrontEnd import *
 from RobotLib.IO import *
 import numpy as np
 
-R = 10
-L = 10
+R = 10.0
+L = 8.51
 class Robot():
     def __init__(self, sparki):
         self.sparki = sparki  #SparkiSerial class from RobotLib.IO
@@ -18,6 +18,9 @@ class Robot():
         self.right_dir = 1
         self.velocity = 0
         self.w = 0
+        self.theta = 0
+        self.cx = 0
+        self.cy = 0
 
     def stop_moving(self):
         self.velocity = 0
@@ -33,10 +36,11 @@ class Robot():
         self.right_dir = 0
 
     def turn_left(self):
-        self.w = self.velocity/R
+        self.w = 7
+
 
     def turn_right(self):
-        self.w = -self.velocity/R
+        self.w = -7
 
     def stop_turn(self):
         self.w = 0
@@ -44,10 +48,36 @@ class Robot():
     def send_command(self):
         self.right_velocity = self.velocity + self.w * L / 2
         self.left_velocity = self.velocity - self.w * L / 2
+
+        self.right_velocity, self.right_dir = self.normalizeVelocity(self.right_velocity)
+        self.left_velocity, self.left_dir = self.normalizeVelocity(self.left_velocity)
+
         self.sparki.send_command(left_speed=self.left_velocity, left_dir=self.left_dir ,
                                  right_speed=self.right_velocity, right_dir=self.right_dir,
                                  servo_angle=0,
                                  gripper_status=0)
+
+    def normalizeVelocity(self, vel):
+        if vel < 0:
+            dir = 0
+            vel = abs(vel)
+        else:
+            dir = 1
+        vel = int(vel)
+        return vel, dir
+
+
+    def robot_to_map_transfromation(self):
+        steps_sec = abs(self.w)/R * 100
+        self.theta += self.w * steps_sec
+        print self.theta/180*3.1416
+        T = np.array([(math.cos(self.theta), -math.sin(self.theta), self.cx),
+                      (math.sin(self.theta), math.cos(self.theta), self.cy),
+                      (0,0,1)])
+        p = np.array([self.cx,self.cy,1]).reshape(3,1)
+        c = np.dot(T,p)
+
+        print c
 
 
 
@@ -112,6 +142,7 @@ class MyFrontEnd(FrontEnd):
         #
         # you can also calculate dead reckoning (forward kinematics) and other things like PID control here
         self.robot.send_command()
+        self.robot.robot_to_map_transfromation()
 
 def main():
     # parse arguments
