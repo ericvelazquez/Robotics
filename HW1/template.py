@@ -50,7 +50,7 @@ class Robot():
             return V / R
         else:
             # Question: which angular velocity we set here in order to rotate good in all velocities?
-            return V
+            return V / R
 
     def stop_turn(self):
         self.w = 0
@@ -137,7 +137,7 @@ class Robot():
     def testCode2(self):
         self.move_forward()  # Move forward 5 seconds at 2 cm/s => 10 cm
         wait(5, self.stop_moving)
-        sec_90 = math.pi / 2 / V
+        sec_90 = math.pi / 2 / (V/R)
         wait(5 + 1, self.turn_right)
         wait(5 + 1 + sec_90, self.stop_turn)
         wait(5 + 1 + sec_90 + 1, self.move_forward)
