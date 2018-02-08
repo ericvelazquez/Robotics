@@ -10,11 +10,11 @@ import numpy as np
 from threading import Timer
 
 R = 10.0  # cm
-L = 8.51  # cm
+L = 8.4  # cm
 DISPLAY_SIZE = 256
-V = 2.0  # 2 cm/s
-VEL_MAX = float(V + V / R * L / 2)
-
+V = 2  # 2 cm/s
+D = 5 # cm (diameter)
+VEL_MAX = 1000.0/4096.0*D/2.0*2.0*3.1415
 
 class Robot():
     def __init__(self, sparki):
@@ -23,16 +23,17 @@ class Robot():
         self.left_velocity = 0
         self.left_dir = 1
         self.right_dir = 1
-        self.velocity = 0
+        self.velocity = 0.0
         self.w = 0
         self.theta = 0
         self.cx = DISPLAY_SIZE / 2
         self.cy = DISPLAY_SIZE / 2
         self.gripper = 0
         self.servo_angle = 0
+        print VEL_MAX
 
     def stop_moving(self):
-        self.velocity = 0
+        self.velocity = 0.0
 
     def move_forward(self):
         self.velocity = V
@@ -45,10 +46,16 @@ class Robot():
         self.right_dir = 0
 
     def turn_left(self):
-        self.w = V / R
+        if self.velocity > 0:
+            self.w = V / R
+        else:
+            self.w = V
 
     def turn_right(self):
-        self.w = -V / R
+        if self.velocity > 0:
+            self.w = -V / R
+        else:
+            self.w = -V
 
     def stop_turn(self):
         self.w = 0
@@ -68,10 +75,11 @@ class Robot():
         self.right_velocity, self.right_dir = self.normalizeVelocity(self.right_velocity)
         self.left_velocity, self.left_dir = self.normalizeVelocity(self.left_velocity)
 
-        self.theta += self.w * time_delta
-
-        self.cx += math.cos(self.theta) * self.velocity * time_delta
-        self.cy += math.sin(self.theta) * self.velocity * time_delta
+        t_move = transform(self.velocity * time_delta,0,self.w * time_delta)
+        newT = self.robot_to_map_transfromation().dot(t_move)
+        self.cx = newT.item((0, 2))
+        self.cy = newT.item((1, 2))
+        self.theta = angle(newT)
 
     def send_command(self):
         self.sparki.send_command(left_speed=self.toPercent(self.left_velocity), left_dir=self.left_dir,
@@ -80,7 +88,7 @@ class Robot():
                                  gripper_status=self.gripper)
 
     def toPercent(self, vel):
-        return int(vel / VEL_MAX * 100 * 0.7)
+        return int(vel / VEL_MAX * 100)
 
     def normalizeVelocity(self, vel):
         if vel < 0 or self.velocity < 0:
@@ -106,6 +114,7 @@ class Robot():
         return T_robot_to_map.dot(T_sonar_to_robot).dot(p_sonar)
 
     def draw_robot(self, surface):
+
         p1 = self.robot_to_map_frame(-5, 4.5)  # top left
         p2 = self.robot_to_map_frame(5, 4.5)  # top right
         p3 = self.robot_to_map_frame(5, -4.5)  # bottom left
@@ -126,18 +135,18 @@ class Robot():
         self.gripper = (self.gripper + 1) % 3
 
     def testCode1(self):
+        t = 10.0/V # time to move 10 cm
         self.move_forward()
-
-        wait(1, self.stop_moving)
+        wait(t, self.stop_moving)
 
     def testCode2(self):
         self.move_forward()  # Move forwared 5 seconds at 2 cm/s => 10 cm
         wait(5, self.stop_moving)
-        sec_90 = 3.1416/2/(V / R)
-        wait(5+1, self.turn_right)
-        wait(5+1+sec_90, self.stop_turn)
-        wait(5+1+sec_90+1, self.move_forward)
-        wait(5+1+sec_90+1+5, self.stop_moving)
+        sec_90 = 3.1416 / 2 * V
+        wait(5 + 1, self.turn_right)
+        wait(5 + 1 + sec_90, self.stop_turn)
+        wait(5 + 1 + sec_90 + 1, self.move_forward)
+        wait(5 + 1 + sec_90 + 1 + 5, self.stop_moving)
 
 
 class MyFrontEnd(FrontEnd):
