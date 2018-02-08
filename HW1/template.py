@@ -9,13 +9,12 @@ from RobotLib.Math import *
 import numpy as np
 from threading import Timer
 
-R = 10.0  # cm
-L = 8.4  # cm
+R = 10.0  # cm (Distance from ICC)
+L = 8.4  # cm (Distance between wheels)
 DISPLAY_SIZE = 256
-V = 2  # 2 cm/s
-D = 5 # cm (diameter)
-VEL_MAX = 1000.0/4096.0*D/2.0*2.0*3.1415
-
+V = 2 # 2 cm/s (Robot velocity)
+D = 5 # cm (wheel diameter)
+VEL_MAX = 1000.0/4096.0*D/2.0*2.0*math.pi #steps/sec*1/max_steps*radius*2pi
 class Robot():
     def __init__(self, sparki):
         self.sparki = sparki  # SparkiSerial class from RobotLib.IO
@@ -30,32 +29,28 @@ class Robot():
         self.cy = DISPLAY_SIZE / 2
         self.gripper = 0
         self.servo_angle = 0
-        print VEL_MAX
 
     def stop_moving(self):
         self.velocity = 0.0
 
     def move_forward(self):
         self.velocity = V
-        self.left_dir = 1
-        self.right_dir = 1
 
     def move_backward(self):
         self.velocity = -V
-        self.left_dir = 0
-        self.right_dir = 0
 
     def turn_left(self):
-        if self.velocity > 0:
-            self.w = V / R
-        else:
-            self.w = V
+        self.w = self.get_new_w()
 
     def turn_right(self):
+        self.w = -self.get_new_w()
+
+    def get_new_w(self):
         if self.velocity > 0:
-            self.w = -V / R
+            return V / R
         else:
-            self.w = -V
+            # Question: which angular velocity we set here in order to rotate good in all velocities?
+            return V
 
     def stop_turn(self):
         self.w = 0
@@ -108,7 +103,7 @@ class Robot():
         return c
 
     def sonar_to_map_frame(self, px, py):
-        T_sonar_to_robot = transform(2.5, 0, self.servo_angle * 3.1416 / 180)
+        T_sonar_to_robot = transform(2.5, 0, self.servo_angle * math.pi / 180)
         T_robot_to_map = self.robot_to_map_transfromation()
         p_sonar = np.array([px, py, 1]).reshape(3, 1)
         return T_robot_to_map.dot(T_sonar_to_robot).dot(p_sonar)
@@ -140,9 +135,9 @@ class Robot():
         wait(t, self.stop_moving)
 
     def testCode2(self):
-        self.move_forward()  # Move forwared 5 seconds at 2 cm/s => 10 cm
+        self.move_forward()  # Move forward 5 seconds at 2 cm/s => 10 cm
         wait(5, self.stop_moving)
-        sec_90 = 3.1416 / 2 * V
+        sec_90 = math.pi / 2 / V
         wait(5 + 1, self.turn_right)
         wait(5 + 1 + sec_90, self.stop_turn)
         wait(5 + 1 + sec_90 + 1, self.move_forward)
