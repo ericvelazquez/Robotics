@@ -9,12 +9,12 @@ from RobotLib.Math import *
 import numpy as np
 from threading import Timer
 
-R = 10.0  # cm (Distance from ICC)
+W = 0.5 #rad/s
 L = 8.4  # cm (Distance between wheels)
 DISPLAY_SIZE = 256
 V = 2 # 2 cm/s (Robot velocity)
-D = 5 # cm (wheel diameter)
-VEL_MAX = 1000.0/4096.0*D/2.0*2.0*math.pi #steps/sec*1/max_steps*radius*2pi
+D = 4.35 # cm (wheel diameter)
+VEL_MAX = 1000.0/4096.0*D/2.0*2.0*math.pi #max_steps/sec*1/steps_rev*wheel_radius*2pi
 class Robot():
     def __init__(self, sparki):
         self.sparki = sparki  # SparkiSerial class from RobotLib.IO
@@ -40,17 +40,11 @@ class Robot():
         self.velocity = -V
 
     def turn_left(self):
-        self.w = self.get_new_w()
+        self.w = W
 
     def turn_right(self):
-        self.w = -self.get_new_w()
+        self.w = -W
 
-    def get_new_w(self):
-        if self.velocity > 0:
-            return V / R
-        else:
-            # Question: which angular velocity we set here in order to rotate good in all velocities?
-            return V / R
 
     def stop_turn(self):
         self.w = 0
@@ -64,8 +58,8 @@ class Robot():
             self.servo_angle -= 10
 
     def update_variables(self, time_delta):
-        self.right_velocity = self.velocity + self.w * L / 2
-        self.left_velocity = self.velocity - self.w * L / 2
+        self.right_velocity = self.velocity + self.w * L / 2.0
+        self.left_velocity = self.velocity - self.w * L / 2.0
 
         self.right_velocity, self.right_dir = self.normalizeVelocity(self.right_velocity)
         self.left_velocity, self.left_dir = self.normalizeVelocity(self.left_velocity)
