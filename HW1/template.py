@@ -13,7 +13,7 @@ W = 0.5 #rad/s
 L = 8.4  # cm (Distance between wheels)
 DISPLAY_SIZE = 256
 V = 2 # 2 cm/s (Robot velocity)
-D = 4.35 # cm (wheel diameter)
+D = 5 # cm (wheel diameter)
 VEL_MAX = 1000.0/4096.0*D/2.0*2.0*math.pi #max_steps/sec*1/steps_rev*wheel_radius*2pi
 class Robot():
     def __init__(self, sparki):
@@ -130,12 +130,13 @@ class Robot():
 
     def testCode2(self):
         self.move_forward()  # Move forward 5 seconds at 2 cm/s => 10 cm
-        wait(5, self.stop_moving)
-        sec_90 = math.pi / 2 / (V/R)
-        wait(5 + 1, self.turn_right)
-        wait(5 + 1 + sec_90, self.stop_turn)
-        wait(5 + 1 + sec_90 + 1, self.move_forward)
-        wait(5 + 1 + sec_90 + 1 + 5, self.stop_moving)
+        t = 10.0/V
+        wait(t, self.stop_moving)
+        sec_90 = math.pi / 2 / W
+        wait(t + 1, self.turn_right)
+        wait(t + 1 + sec_90, self.stop_turn)
+        wait(t + 1 + sec_90 + 1, self.move_forward)
+        wait(t + 1 + sec_90 + 1 + t, self.stop_moving)
 
 
 class MyFrontEnd(FrontEnd):
