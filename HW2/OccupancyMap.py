@@ -3,6 +3,7 @@ import math
 import numpy as np
 from RobotLib.Math import *
 from cv2 import imread, imwrite
+import cv2
 # to install cv2 module: pip install opencv-python
 
 class OccupancyMap:
@@ -21,6 +22,9 @@ class OccupancyMap:
                 width: optional width of the map (if path is not provided)
                 height: optional height of the map (if path is not provided)
         """
+        # create a map with the width of the robot added to the obstacles
+        # so we avoid collisions with the object
+
         if path is not None:
             # read map from image
             self.grid = imread(path,0).astype('float32')/255.
@@ -32,6 +36,9 @@ class OccupancyMap:
 
             self.width = self.grid.shape[1]
             self.height = self.grid.shape[0]
+
+            self.gridDilate = cv2.dilate(self.grid, np.ones((15,15),np.uint8), iterations = 1)
+
         elif width is not None and height is not None:
             # create empty map
             self.width = width
@@ -53,8 +60,15 @@ class OccupancyMap:
             Returns:
                 First-hit distance or zero if no hit.
         """
-        # complete this function
-        return 0.
+        # max distance set to 250 to fix slow simulation
+        max_distance = 250
+        #one centimeter increment
+        for d in range(1,max_distance):
+            point = mul(T_sonar_map,vec(d,0))
+            if point[0]<512 and point[0]>=0 and point[1]<512 and \
+                point[0]>=0 and self.gridDilate[int(point[0])][int(point[1])] == 1:
+                return d
+        return 0
     
 if __name__ == '__main__':
     # create a map
@@ -62,6 +76,7 @@ if __name__ == '__main__':
     
     # obstacle
     grid[300:400,300:400] = 1
-    
+
     imwrite('map.png',(grid*255.).astype('uint8'))
+
 
