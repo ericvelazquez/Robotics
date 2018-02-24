@@ -1,13 +1,13 @@
 HOW TO RUN OUR CODE:
 
-*PID_NAV:
-**python pid_nav.py
-**python pid_nav.py --port=/dev/tty.Barcelona-DevB 
+* PID_NAV:
+** python pid_nav.py
+** python pid_nav.py --port=/dev/tty.Barcelona-DevB 
 
-*HOLO_NAV:
-**python holo_nav
-**python holo_nav --port=/dev/tty.Barcelona-DevB 
+* HOLO_NAV:
+** python holo_nav
+** python holo_nav --port=/dev/tty.Barcelona-DevB 
 
-*BUG:
-**python bug.py
-**python bug.py --port=/dev/tty.Barcelona-DevB 
+* BUG:
+** python bug.py
+** python bug.py --port=/dev/tty.Barcelona-DevB 
