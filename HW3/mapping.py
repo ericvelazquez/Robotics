@@ -8,11 +8,15 @@ from RobotLib.IO import *
 from RobotLib.Math import *
 from Robot import Robot
 from ObstacleMap import ObstacleMap
+from OccupancyGrid import OccupancyGrid
+from RangeFinder import RangeFinder
 import numpy as np
 
 class MyFrontEnd(FrontEnd):
     def __init__(self,omap_path,sparki):
         self.omap = ObstacleMap(omap_path)
+        self.ogrid = OccupancyGrid()
+        self.rfinder = RangeFinder(ogrid=self.ogrid)
     
         FrontEnd.__init__(self,self.omap.width,self.omap.height)
 
@@ -48,8 +52,8 @@ class MyFrontEnd(FrontEnd):
             self.robot.sonar_angle = 0
         
     def draw(self,surface):
-        # draw obstacle map
-        self.omap.draw(surface)
+        # draw occupancy grid
+        self.ogrid.draw(surface)
 
         # draw robot
         self.robot.draw(surface)
@@ -62,7 +66,13 @@ class MyFrontEnd(FrontEnd):
         else:
             # get current rangefinder reading
             self.robot.sonar_distance = self.sparki.dist
-        
+
+        # send rangefinde data to RangeFinder class
+        self.rfinder.inverse_sensor_model(self.robot.sonar_distance)
+
+        # update the occupancy grid
+        self.ogrid.cell_prob_occupancy()
+
         # calculate servo setting
         servo = int(self.robot.sonar_angle*180./math.pi)
 
@@ -74,6 +84,8 @@ class MyFrontEnd(FrontEnd):
         
         # update robot position
         self.robot.update(time_delta)
+
+
 
 def main():
     # parse arguments
