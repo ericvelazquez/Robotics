@@ -16,12 +16,12 @@ class MyFrontEnd(FrontEnd):
     def __init__(self,omap_path,sparki):
         self.omap = ObstacleMap(omap_path)
         self.ogrid = OccupancyGrid()
-        self.rfinder = RangeFinder(ogrid=self.ogrid)
     
         FrontEnd.__init__(self,self.omap.width,self.omap.height)
 
         self.sparki = sparki
         self.robot = Robot()
+        self.rfinder = RangeFinder(self.ogrid, self.robot)
         
         # center robot
         self.robot.x = self.omap.width*0.5

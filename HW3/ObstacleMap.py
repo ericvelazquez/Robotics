@@ -65,8 +65,8 @@ class ObstacleMap:
 
             # test if cell is occupied
             if self.grid[r,c] > 0:
-                # return rangefinder measurement
-                return i
+                # return rangefinder measurement plus a gaussian noise of standard deviation of 10 centered to 0
+                return i + np.random.normal(0,2,1)[0]
 
         # return 0 for no hit
         return 0.

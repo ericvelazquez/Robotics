@@ -9,7 +9,7 @@ from cv2 import imread, imwrite
 
 class OccupancyGrid:
     """
-
+        Maintains an occupancy grid of the obstacles found.
     """
 
     def __init__(self):
@@ -19,10 +19,8 @@ class OccupancyGrid:
     def cell_prob_occupancy(self):
         """
         Computes the probability of occupancy of each cell
-        :return: porbability of occupancy
         """
         self.probability_occupancy = 1-1/(1 + np.exp(self.log_odds))
-        print self.log_odds
 
     def draw(self, surface):
         """ Draws the porbability of occupancy onto the surface. """
