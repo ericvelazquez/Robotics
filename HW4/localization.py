@@ -28,7 +28,7 @@ class MyFrontEnd(FrontEnd):
 
         # create particle filter
         alpha=[0.5,0.5,0.5,0.5,0.5,0.5]
-        self.particle_filter = ParticleFilter(num_particles=200,alpha=alpha,robot=self.robot,omap=self.omap)
+        self.particle_filter = ParticleFilter(num_particles=100,alpha=alpha,robot=self.robot,omap=self.omap)
         
         self.sonar_step = deg2rad(1.)
 

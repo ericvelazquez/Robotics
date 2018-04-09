@@ -1,0 +1,5 @@
+HOW TO RUN OUR CODE:
+
+** python localization.py
+** python localization.py --port=/dev/tty.Barcelona-DevB 
+
