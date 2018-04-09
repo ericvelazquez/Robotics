@@ -1,0 +1,5 @@
+HOW TO RUN OUR CODE:
+
+** python mapping.py
+** python mapping.py --port=/dev/tty.Barcelona-DevB 
+
