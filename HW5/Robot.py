@@ -34,6 +34,7 @@ class Robot:
         self.requested_sonar_angle = 0 # rad -- 0 angle = sonar pointed along x-axis of robot
         self.sonar_angle = 0 # rad -- 0 angle = sonar pointed along x-axis of robot
         self.sonar_distance = 10 # cm -- most recent distance reported by sonar
+        self.is_tile = 0 # 1 for tile, 0 for no tile
 
     def get_robot_map_transform(self):
         """ Get transformation that takes points from robot frame to map frame """

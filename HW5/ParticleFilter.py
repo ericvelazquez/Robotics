@@ -8,18 +8,18 @@ class ParticleFilter:
     """
     Implements a particle filter for Monte Carlo Localization.
     """
-    def __init__(self,num_particles,alpha,robot,omap):
+    def __init__(self,num_particles,alpha,robot,tmap):
         """ Creates the particle filter algorithm class.
             Arguments:
                 num_particles: number of particles
                 alpha: list of four coefficients for motion model
                 robot: Robot object
-                omap: ObstacleMap object
+                tmap: ObstacleMap object
         """
         self.num_particles = num_particles
         self.alpha = alpha
         self.robot = robot
-        self.omap = omap
+        self.tmap = tmap
 
         # make a matrix of particles
         # each row is a particle (cx,cy)
@@ -69,11 +69,9 @@ class ParticleFilter:
         """ Update particle weights. """
         self.particle_weights[:] = 1e-5
         for i in range(len(self.particles)):
-            T_robot_map = transform(self.particles[i,0],self.particles[i,1],self.robot.theta)
-            T_sonar_map = T_robot_map * self.robot.get_sonar_robot_transform()
-            true_dist = self.omap.get_first_hit(T_sonar_map,add_noise=False)
-            if true_dist > 0:
-                self.particle_weights[i] = self.sensor_model(self.robot.sonar_distance,true_dist)
+            particle_tile = self.tmap.get_tile(self.particles[i,0],self.particles[i,1])
+            self.particle_weights[i] = self.sensor_model(self.robot.is_tile, particle_tile)
+
         self.particle_weights /= np.sum(self.particle_weights)
     
     def sample(self):
