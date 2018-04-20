@@ -36,7 +36,7 @@ class TilesMap:
         for rect in self.rectangles:
             pygame.draw.rect(surface,(255,0,0),rect)
     
-    def get_tile(self,cx, cy):
+    def get_tile(self, cx, cy):
         """ Calculates if robot is within a tile or not.
             Arguments:
                 robot_cx: robot x position
