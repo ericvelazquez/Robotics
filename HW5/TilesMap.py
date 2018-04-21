@@ -55,7 +55,7 @@ class TilesMap:
 
 def generate_map():
     rectangles = np.ndarray((0, 4))
-    max_tiles = np.random.randint(5, 20, size=1)
+    max_tiles = np.random.randint(20, 40, size=1)
     for i in range(max_tiles):
         # obstacle
         x = np.random.randint(1, W - W / 4, size=1)
