@@ -26,7 +26,7 @@ class MyFrontEnd(FrontEnd):
 
         # create particle filter
         alpha=[0.5,0.5,0.5,0.5]
-        self.particle_filter = ParticleFilter(num_particles=50, alpha=alpha, robot=self.robot, tmap=self.tmap)
+        self.particle_filter = ParticleFilter(num_particles=200, alpha=alpha, robot=self.robot, tmap=self.tmap)
         
         # set message callback
         self.sparki.message_callback = self.message_received
