@@ -72,8 +72,12 @@ class ParticleFilter:
             particle_tile = self.tmap.get_tile(self.particles[i,0],self.particles[i,1])
             self.particle_weights[i] = self.sensor_model(self.robot.is_tile, particle_tile)
 
-        self.particle_weights /= np.sum(self.particle_weights)
-    
+        try:
+            self.particle_weights /= np.sum(self.particle_weights)
+        except RuntimeWarning as e:
+            print(e)
+            print(self.particle_weights,np.sum(self.particle_weights))
+
     def sample(self):
         """ Sample particles according to their likelihood. """
         sum_particle_weights = np.cumsum(self.particle_weights)
