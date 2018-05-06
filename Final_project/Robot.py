@@ -37,10 +37,10 @@ class Robot:
         self.sonar_angle = 0  # rad -- 0 angle = sonar pointed along x-axis of robot
         self.sonar_distance = 10  # cm -- most recent distance reported by sonar
         self.is_tile = 0  # 1 for tile, 0 for no tile
-        self.gripper_status = 0  # gripper_status
-        self.line_left = 0  # left line sensor
-        self.line_center = 0  # center line sensor
-        self.line_right = 0  # right line sensor
+        self.gripper_status = 0  # gripper_status, 0 = stop, 1 = open, 2 = close
+        self.line_left = 0  # left line sensor, 0 for no line, 1 for line
+        self.line_center = 0  # center line sensor, 0 for no line, 1 for line
+        self.line_right = 0  # right line sensor, 0 for no line, 1 for line
         self.compass = 0  # compass direction
 
     def get_robot_map_transform(self):
