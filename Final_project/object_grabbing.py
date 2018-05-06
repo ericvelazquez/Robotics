@@ -6,7 +6,8 @@ from Robot import Robot
 from RobotLib.FrontEnd import *
 from RobotLib.IO import *
 
-D = 40
+D = 20
+ANG_VEL = 5. * math.pi / 180
 
 class MyFrontEnd(FrontEnd):
     """ Class for object_grabing final project
@@ -33,6 +34,9 @@ class MyFrontEnd(FrontEnd):
         # 6 - Release object
         self.state = 0
 
+        #object found distance
+        self.object_d = 0
+
         # last timestamp for update use
         self.last_timestamp_update = 0
 
@@ -43,6 +47,10 @@ class MyFrontEnd(FrontEnd):
         # time to desired orientation
         self.rotate_until_timestamp = 0
 
+        # first base line detected
+        self.base_line_detected = False
+        self.object_dropped = False
+        self.drope_zone = False
 
     def mouseup(self, x, y, button):
         # x,y is position of mouse click
@@ -68,7 +76,7 @@ class MyFrontEnd(FrontEnd):
 
             gripper = 1
 
-            if (self.getMillis() - self.last_timestamp_update) > 4000:
+            if (self.getMillis() - self.last_timestamp_update) > 8000:
                 # change to sate 1
                 gripper = 0
                 self.last_timestamp_update = 0
@@ -77,8 +85,10 @@ class MyFrontEnd(FrontEnd):
 
         elif self.state == 1:
             # keep rotating until object found
-            self.robot.requested_ang_vel = 5. * math.pi / 180.
-            if self.robot.sonar_distance < D:
+            self.robot.requested_ang_vel = ANG_VEL
+            # sometimes the rangefinder returns 0
+            if self.robot.sonar_distance < D and self.robot.sonar_distance != 0:
+                self.object_d = self.robot.sonar_distance
                 #object found
                 self.robot.requested_ang_vel = 0
                 self.resetObjectTimestamps()
@@ -87,22 +97,23 @@ class MyFrontEnd(FrontEnd):
 
         elif self.state == 2:
             # Rotate robot to face the center of the object
-            if self.robot.sonar_distance == 4294967295:
-                return
-            if self.rotate_until_timestamp == 0:
-                self.robot.requested_ang_vel = 5. * math.pi / 180.
-                if self.robot.sonar_distance < D and self.object_right_timestamp == 0:
+            if self.robot.sonar_distance == 4294967295 or self.robot.sonar_distance == 0:
+                # If sonar distance if error, do nothing
+                self.robot.requested_ang_vel = 0
+            elif self.rotate_until_timestamp == 0:
+                self.robot.requested_ang_vel = ANG_VEL
+                if self.robot.sonar_distance < (self.object_d + 3) and self.object_right_timestamp == 0:
                     print 'get right timestamp'
                     self.object_right_timestamp = self.getMillis()
-                elif self.robot.sonar_distance > D and self.object_right_timestamp != 0:
+                elif self.robot.sonar_distance > (self.object_d + 3) and self.object_right_timestamp != 0:
                     # No more facing object
                     print 'get left timestamp'
                     self.object_left_timestamp = self.getMillis()
                     self.rotate_until_timestamp = self.getMillis() + (self.object_left_timestamp - self.object_right_timestamp)/2
             elif self.rotate_until_timestamp != 0 and self.rotate_until_timestamp-self.getMillis()>0:
-                # Move right
+                # Move center
                 print 'move to center'
-                self.robot.requested_ang_vel = -5. * math.pi / 180.
+                self.robot.requested_ang_vel = -ANG_VEL
             else:
                 # Facing the center of the object
                 self.rotate_until_timestamp = 0
@@ -125,6 +136,7 @@ class MyFrontEnd(FrontEnd):
                 self.state = 4
 
         elif self.state == 4:
+            # Grab object
             if self.last_timestamp_update == 0:
                 self.last_timestamp_update = self.getMillis()
 
@@ -138,24 +150,43 @@ class MyFrontEnd(FrontEnd):
                 self.state = 5
 
         elif self.state == 5:
-            #rotate until facing the base
-            #keep moving until base
-            #state 5
-            pass
+            self.robot.requested_lin_vel = -2.0
+            if self.robot.line_center and self.base_line_detected == False:
+                self.base_line_detected = True
+            elif self.base_line_detected and self.drope_zone == False:
+                if self.last_timestamp_update == 0:
+                    self.last_timestamp_update = self.getMillis()
 
-        elif self.state == 6:
-            print "state 6"
-            if self.last_timestamp_update == 0:
-                self.last_timestamp_update = self.getMillis()
+                if (self.getMillis() - self.last_timestamp_update) > 5000:
+                    self.last_timestamp_update = 0
+                    self.robot.requested_lin_vel = 0
+                    self.drope_zone = True
+            elif self.drope_zone and self.object_dropped == False:
+                self.robot.requested_lin_vel = 0
+                if self.last_timestamp_update == 0:
+                    self.last_timestamp_update = self.getMillis()
 
-            gripper = 1
+                gripper = 1
 
-            if (self.getMillis() - self.last_timestamp_update) > 4000:
-                # change to sate 1
-                gripper = 0
-                self.last_timestamp_update = 0
-                self.state = 1
-            pass
+                if (self.getMillis() - self.last_timestamp_update) > 8000:
+                    gripper = 0
+                    self.last_timestamp_update = 0
+                    self.object_dropped = True
+
+            elif self.object_dropped:
+                self.robot.requested_lin_vel = 2.0
+                if self.last_timestamp_update == 0:
+                    self.last_timestamp_update = self.getMillis()
+
+                if (self.getMillis() - self.last_timestamp_update) > 5000:
+                    self.last_timestamp_update = 0
+                    self.robot.requested_lin_vel = 0
+                    self.robot.requested_lin_vel = 0
+                    self.state = 1
+                    self.base_line_detected = False
+                    self.object_dropped = False
+                    self.drope_zone = False
+
 
         """ Sends command to robot, if not in simulator mode. """
         if self.sparki.port is not '':
@@ -209,7 +240,7 @@ class MyFrontEnd(FrontEnd):
 
         # update sonar ping distance
         if 'rangefinder' in message.keys():
-            self.robot.sonar_distance = message['rangefinder']
+            self.robot.newSonarDistance(message['rangefinder'])
 
         # update sonar angle
         if 'servo_angle' in message.keys():
@@ -240,8 +271,8 @@ class MyFrontEnd(FrontEnd):
         if 'compass' in message.keys():
             self.robot.compass = message['compass']/100
 
-        if self.robot.sonar_distance != 4294967295:
-            print('rangefinder', self.robot.sonar_distance)
+        # if self.robot.sonar_distance != 4294967295:
+        print('rangefinder', self.robot.sonar_distance, message['rangefinder'])
         # print('servo_angle', self.robot.sonar_angle)
         # print('compass', self.robot.compass)
         # print('girpper_status', self.robot.gripper_status)

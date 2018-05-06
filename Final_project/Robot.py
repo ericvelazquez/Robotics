@@ -35,7 +35,8 @@ class Robot:
         self.theta = 0  # rad
         self.requested_sonar_angle = 0  # rad -- 0 angle = sonar pointed along x-axis of robot
         self.sonar_angle = 0  # rad -- 0 angle = sonar pointed along x-axis of robot
-        self.sonar_distance = 10  # cm -- most recent distance reported by sonar
+        self.sonar_distance = 10  # cm -- mean of the last 5 sonar distances
+        self.sonar_distance_array = []  # cm -- last 5 sonar distances
         self.is_tile = 0  # 1 for tile, 0 for no tile
         self.gripper_status = 0  # gripper_status, 0 = stop, 1 = open, 2 = close
         self.line_left = 0  # left line sensor, 0 for no line, 1 for line
@@ -175,3 +176,13 @@ class Robot:
         pygame.draw.line(surf, (0, 0, 0), left_front, left_back)
         pygame.draw.line(surf, (0, 0, 0), right_front, right_back)
         pygame.draw.line(surf, (0, 0, 0), left_back, right_back)
+
+    def newSonarDistance(self, new_distance):
+
+        if new_distance != 0 and new_distance != 4294967295:
+            if len(self.sonar_distance_array) > 5:
+                self.sonar_distance_array.pop(0)
+            self.sonar_distance_array.append(new_distance)
+            self.sonar_distance = sum(self.sonar_distance_array)/len(self.sonar_distance_array)
+
+
