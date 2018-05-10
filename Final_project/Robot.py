@@ -43,6 +43,7 @@ class Robot:
         self.line_center = 0  # center line sensor, 0 for no line, 1 for line
         self.line_right = 0  # right line sensor, 0 for no line, 1 for line
         self.compass = 0  # compass direction
+        self.distance_threshold = 5 # in order to no detect distances lower than a distance
 
     def get_robot_map_transform(self):
         """ Get transformation that takes points from robot frame to map frame """
@@ -179,8 +180,8 @@ class Robot:
 
     def newSonarDistance(self, new_distance):
 
-        if new_distance != 0 and new_distance != 4294967295:
-            if len(self.sonar_distance_array) > 5:
+        if new_distance > 0 and new_distance != 4294967295:
+            if len(self.sonar_distance_array) > 10:
                 self.sonar_distance_array.pop(0)
             self.sonar_distance_array.append(new_distance)
             self.sonar_distance = sum(self.sonar_distance_array)/len(self.sonar_distance_array)
